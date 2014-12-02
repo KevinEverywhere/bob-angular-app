@@ -5,19 +5,16 @@
 This is the sample application that can be viewed here: [bob-angular](http://bob-angular.herokuapp.com/). 
 The full repository, including the node application, can be found at the [bob-angular](https://github.com/KevinEverywhere/bob-angular-app) repository.
 
-The application is meant to demonstrate the mapping of 2D Web content, including video, Leaflet map tiles, SVG and HTML layout, on to 3D surfaces. It uses [three.js](http://threejs.org/), particularly, the [CSS3DRenderer](http://threejs.org/examples/js/renderers/CSS3DRenderer.js). More information can be found in web page itself, which describes the application and content itself.
+The application is meant to demonstrate the mapping of 2D Web content, including video, Leaflet map tiles, SVG and HTML layout, on to 3D surfaces. It uses [angular.js](http://angularjs.org/) as the principal framework, and [three.js](http://threejs.org/), particularly, the [CSS3DRenderer](http://threejs.org/examples/js/renderers/CSS3DRenderer.js), for mapping to 3D. More information can be found in the web page, which describes the application and content itself; and the bob-angular repo.
 
-### Clone bob-angular-app
+### Instructions
 
 Enter the following in the terminal window:
 ```
 git clone https://github.com/KevinEverywhere/bob-angular-app.git
 ```
-You now have the client-side app installed, and you can go to the bob-angular-app directory to see the files. 
+You now have the client-side app installed, and you can go to the bob-angular-app directory to see the files. They are structured: 
 
-
-
-## Directory Layout
 
 ```
 app/                                   --> application source files
@@ -40,20 +37,5 @@ app/                                   --> application source files
 ## Contact
 
 For more information on bob-angular please contact kevin@planetkevin.com
-
-[angular]: http://angularjs.org/
-[three]: http://threejs.org/
-[express]: http://expressjs.com/
-[git]: http://git-scm.com/
-[grunt]: http://gruntjs.com/
-[bower]: http://bower.io
-[npm]: https://www.npmjs.org/
-[node]: http://nodejs.org
-[less]: http://lesscss.org/
-[leaflet]:http://leafletjs.com/
-[protractor]: https://github.com/angular/protractor
-[jasmine]: http://jasmine.github.io
-[karma]: http://karma-runner.github.io
-[travis]: https://travis-ci.org/
 
 
