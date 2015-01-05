@@ -1,6 +1,9 @@
 html, body{
 	overflow:hidden;
 }
+
+.auto-hint { color: #AAAAAA; }
+
 @media (max-width: 239px)  and (orientation:landscape){
 	#doesnotWork{
 		display:block;
@@ -11,6 +14,13 @@ html, body{
 	#doesnotWork{
 		display:block;
 	}
+}
+.em1{
+	font-size:1.25em;
+	width:9em;
+}
+input{
+	margin-bottom:0.4em;
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus{
@@ -78,10 +88,10 @@ ul.nav{
 }
 
 @media screen and (min-width: 768px) and (orientation:landscape){
-}
-.nav > li > a{
-	background:rgba(5, 5, 5, .95);
-	padding:1em 0.6em;
+	.nav > li > a{
+		background:rgba(5, 5, 5, .95);
+		padding:1em 0.6em;
+	}
 }
 
 .navbar-inverse{
@@ -151,7 +161,7 @@ ul.alignLeft{
 	background-color:#eee;
 }
 
-#leaflet, #leaflet .content, #context, #context .content, #svgHolder, #main{
+#leaflet, #leaflet .content, #context, #context .content, #svgHolder, #main, #ytSearch{
 	position:absolute;
 	left:0px;
 	top:0px;
@@ -163,13 +173,11 @@ ul.alignLeft{
 	SVG styles
 */
 
-
-
 #theWorld{
 	position:relative;
 	top:-2.5em;
 	left:-2.5em;
-	.transformSVG(.95);
+	.transformSVG(@svgWorld);
 }
 
 .transformSVG(@toWhat) {
@@ -192,7 +200,18 @@ ul.alignLeft{
 	overflow:hidden;
 }
 
-#ytplayer{
+#ytSearchDiv{
+	padding:0em;
+	margin:0em;
+	width:@axis2W;
+	height:@axis2H;
+}
+
+#ytSearch{
+background:none;
+}
+
+#ytDiv #ytplayer, #ytSearch, #youtubeSearch{
 	padding:0em;
 	margin:0em;
 	width:@axis2W;
@@ -242,11 +261,25 @@ ul.alignLeft{
 	height:@axis2H;
 }
 
-#leaflet #leafletContext, .svgDiv #svgContext, #youtube #ytContext{
-  display:none;
+.isVisible{
+  display:block;
+  visibility:visible;
 }
 
-#context .content{
+#leaflet #leafletContext, .svgDiv #svgContext, #youtube #ytContext, #ytSearchContext, .isHidden, #ytSearchPlayer #ytplayer .isHidden{
+  display:none;
+  visibility:hidden;
+}
+
+.image_text {
+	width:@trimmedBox;
+	list-style-type: none;
+	list-style-position:inside;
+	margin:0em;
+	padding:0em;
+}
+
+#context .content, .contextPanel .ytSearchContext{
 	position:absolute;
 	left:0px;
 	top:0px;
@@ -353,5 +386,4 @@ h3 li.active{
 	height:@pageBottomH;
 	vertical-align:top;
 }
-
 

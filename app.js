@@ -2,7 +2,6 @@
 
 var bobApp=angular.module("bobApp",  [
 	'threeModule',
-	'd3Module',
 	'countryModule',
 	'bobApp.svg',
 	'bobApp.context',
@@ -16,27 +15,25 @@ var bobApp=angular.module("bobApp",  [
 	'localCRUD',
 	'ui.router'
 ])
-	.run(function ($rootScope, $state, $stateParams, $window, threeCSSService) {
+	.run(function ($rootScope, $state, $stateParams, $window, threeCSSService, YouTubeService, YouTubeSearchService, $location, svgD3Data) {
 		$rootScope.googleReady=false;
 		$rootScope.sectionTitle="Testing";
 		$rootScope.$state = $state;
 		$rootScope.$stateParams = $stateParams;
 		$rootScope.hasOpened=true;
+		$rootScope.currentData=null;
 		$rootScope.interstitialized={done:false};
 		var redraw=function () {
-			console.log('redraw');
 			resize();
 		};
 		var resize=function (evt) {
 			$window.changeSize(evt);
 			try{
 				$state.reload();
-				console.log("$state.reload()");
 			}catch(oops){}
 		};
 		$window.googleApiClientReady = function($rootScope) {
 			$rootScope.googleReady=true;
-			console.log("ggole googleReady");
 		}
 		$window.addEventListener('orientationchange', redraw, false);
 		$window.addEventListener('resize', resize, false);
@@ -47,42 +44,111 @@ var bobApp=angular.module("bobApp",  [
 			$rootScope.$broadcast("onlineStatusUpdate");
 		}, false);
 
- 		$rootScope.$on('navigatingToSection',function(toWhat, toWhich){
+ 		$rootScope.$on('navigatingToSection',function(event, toWhich){
 			$state.go(toWhich);
  		});
-		$rootScope.$on('$stateChangeStart', 
-		function(event, toState, toParams, fromState, fromParams){ 
-			switch(toState){
+ 		$rootScope.$on('incrementCurrentVideo',function(event){
+			YouTubeSearchService.incrementCurrentVideo();
+ 		});
+		$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams){ 
+			switch(toState.name){
 				case "video":
+					var q=$location.absUrl().indexOf("?");
+					if(q!=-1){
+						var cutString=$location.absUrl().substr(q),
+						_start=cutString.indexOf("=")+1,_end=cutString.indexOf("#");
+					//	$state.go("videofeed.videofeed",{videofeed:cutString.substring(_start,_end)})
+						$window.location.href = $location.absUrl().substring(0,q) + "#/videofeed/" + cutString.substring(_start,_end) + "/0";
+					}
+					break;
+				case "video.videofeed.index":
 					break;
 				case "map":
+					var q=$location.absUrl().indexOf("?");
+					if(q!=-1){
+						var searchString="", searchObj=$window.location.search.substring(1).split("&");
+						for(var s=0;s<searchObj.length;s++){
+							if(
+								searchObj[s].split("=")[1] &&
+								searchObj[s].split("=")[1].length>0
+								) {
+								searchString+= 
+									(searchObj[s].split("=")[0] == "geo-location" || searchObj[s].split("=")[0] == "latlong") ?
+										"/"+ searchObj[s].split("=")[0] + "/" + searchObj[s].split("=")[1] : 
+										"/" + searchObj[s].split("=")[1];
+							}
+						}
+						//	$state.go("videofeed.geolocation",{ geolocation:searchString.substring(1) });
+						$window.location.href = $location.absUrl().substring(0,q) + "#/mapfeed/" + searchString.substring(1);
+					}
 					break;
-				case "home":
+				case "mapfeed.geolocation":
+					var q=$location.absUrl().indexOf("?");
+					if(q!=-1){
+						var searchString="", searchObj=$window.location.search.substring(1).split("&");
+						for(var s=0;s<searchObj.length;s++){
+							if(
+								searchObj[s].split("=")[1] &&
+								searchObj[s].split("=")[1].length>0
+								) {
+								searchString+= 
+									(searchObj[s].split("=")[0] == "geo-location" || searchObj[s].split("=")[0] == "latlong") ?
+										"/"+ searchObj[s].split("=")[0] + "/" + searchObj[s].split("=")[1] : 
+										"/" + searchObj[s].split("=")[1];
+							}
+						}
+						$window.location.href = $location.absUrl().substring(0,q) + "#/mapfeed/" + searchString.substring(1);
+					}
+					break;
+				case "mapfeed.latlong":
+					var q=$location.absUrl().indexOf("?");
+					if(q!=-1){
+						var searchString="", searchObj=$window.location.search.substring(1).split("&");
+						for(var s=0;s<searchObj.length;s++){
+							if(searchObj[s].split("=")[0]=="latlong") {
+								var ll=leafletService.processLL(searchObj[s].split("=")[1])
+								searchString="/latlong/"+ ll.lat +"," + ll.lon;
+							}
+						}
+						$window.location.href = $location.absUrl().substring(0,q) + "#/mapfeed" + searchString;
+					}
 					break;
 				case "svg":
+					console.log("state is svg inside switch ");
 					break;
 			}
-			$window['stated']=toState;
-			console.log("toState=" + toState);
-		})
+		});
 		$rootScope.$on('$stateChangeSuccess', 
-		function(event, toState, toParams, fromState, fromParams){ 
-			switch(toState){
+		function(event, toState, toParams, fromState, fromParams){
+			console.log("CURRENT STATE IS " + toState.name);
+			switch(toState.name){
 				case "video":
-				//	$("#sectionTitle").html("You Tube");
 					break;
-				case "map":
-				//	$("#sectionTitle").html("Leaflet Map");
+				case "videofeed.videofeed.index":
+				console.log("everything is right");
+					var q=$location.absUrl().indexOf("?");
+					if(q!=-1){
+						var cutString=$location.absUrl().substr(q),
+						_start=cutString.indexOf("=")+1,_end=cutString.indexOf("#");
+						$window.location.href = $location.absUrl().substring(0,q) + "#/videofeed/" + cutString.substring(_start,_end) + "/0";
+					}else{
+						YouTubeSearchService.currentVideo=toParams.idx;
+						YouTubeService.startMedia(YouTubeSearchService.videos[YouTubeSearchService.currentVideo].id,YouTubeService);
+					}
+
+					break;
+				case "mapfeed":
 					break;
 				case "home":
-				//	$("#sectionTitle").html("About this App");
 					break;
 				case "svg":
-				//	$("#sectionTitle").html("SVG Example");
+					break;
+				case "svg.detail":
+					console.log("svg.detail  inside switch ");
+					svgD3Data.mapWBStats($stateParams.detail)
+					// 
 					break;
 			}
-			$window['stated']=toState;
-			console.log("stateChangeSuccess=" + toState);
 		});
 		resize();
 	})
@@ -93,16 +159,13 @@ var bobApp=angular.module("bobApp",  [
 			url: '/',
 			views:{
 				"axis2":{
-					templateUrl: 'components/main/main.html',
-					controller: 'ThreeCSSController'
+					templateUrl: 'components/main/main.html',				controller: 'ThreeCSSController'
 				},
 				"axis3":{
-					templateUrl: 'components/context/context.html',
-					controller: 'ThreeContextController'
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
 				},
 				"pageBottom":{
-					templateUrl: 'components/footer/footer.html',
-					controller: 'ThreeFooterController'
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
 				}
 			}
 		  })
@@ -110,33 +173,69 @@ var bobApp=angular.module("bobApp",  [
 			url: '/video',
 			views:{
 				"axis2":{
-					templateUrl: 'components/youtube/youtube.html',
-					controller: 'ThreeYouTubeController'
+					templateUrl: 'components/youtube/youtube.html',			controller: 'ThreeYouTubeController'
 				},
 				"axis3":{
- 					templateUrl: 'components/context/context.html',
-					controller: 'ThreeContextController'
+ 					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
 				},
 				"pageBottom":{
-					templateUrl: 'components/footer/footer.html',
-					controller: 'ThreeFooterController'
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
 				}
 			}
 		  })
-		  .state('svg', {
-			url: '/svg',
+		  .state('videofeed', {
+			url: '/videofeed',
 			views:{
 				"axis2":{
-					templateUrl: 'components/svg/svg.html',
-					controller: 'ThreeSVGController'
+					templateUrl: 'components/youtube/youtube_search.html',	controller: 'YouTubeSearchController'
 				},
 				"axis3":{
- 					templateUrl: 'components/context/context.html',
-					controller: 'ThreeContextController'
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
 				},
 				"pageBottom":{
-					templateUrl: 'components/footer/footer.html',
-					controller: 'ThreeFooterController'
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('videofeed.videofeed', {
+			url: '/:videofeed',
+			views:{
+				"axis2":{
+					templateUrl: 'components/youtube/youtube.html',			controller: 'ThreeYouTubeController'
+				},
+				"axis3":{
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('videofeed.videofeed.index', {
+			url: '/:idx',
+			views:{
+				"axis2":{
+					templateUrl: 'components/youtube/youtube.html',			controller: 'ThreeYouTubeController'
+				},
+				"axis3":{
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('video.youtubeid', {
+			url: '/:youtubeid',
+			views:{
+				"axis2":{
+					templateUrl: 'components/youtube/youtube.html',			controller: 'ThreeYouTubeController'
+				},
+				"axis3":{
+ 					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
 				}
 			}
 		  })
@@ -144,16 +243,83 @@ var bobApp=angular.module("bobApp",  [
 			url: '/map',
 			views:{
 				"axis2":{
-					templateUrl: 'components/leaflet/leaflet.html',
-					controller: 'ThreeLeafletController'
+					templateUrl: 'components/leaflet/leaflet.html',			controller: 'ThreeLeafletController'
 				},
 				"axis3":{
- 					templateUrl: 'components/context/context.html',
-					controller: 'ThreeContextController'
+ 					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
 				},
 				"pageBottom":{
-					templateUrl: 'components/footer/footer.html',
-					controller: 'ThreeFooterController'
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('mapfeed', {
+			url: '/mapfeed',
+			views:{
+				"axis2":{
+					templateUrl: 'components/leaflet/leaflet.html',			controller: 'ThreeLeafletController'
+				},
+				"axis3":{
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('mapfeed.latlong', {
+			url: '/latlong/:latlong',
+			views:{
+				"axis2":{
+					templateUrl: 'components/leaflet/leaflet.html',			controller: 'ThreeLeafletController'
+				},
+				"axis3":{
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('mapfeed.geolocation', {
+			url: '/geo-location/:geoLocation',
+			views:{
+				"axis2":{
+					templateUrl: 'components/leaflet/leaflet.html',			controller: 'ThreeLeafletController'
+				},
+				"axis3":{
+					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('svg', {
+			url: '/svg',
+			views:{
+				"axis2":{
+					templateUrl: 'components/svg/svg.html',					controller: 'ThreeSVGController'
+				},
+				"axis3":{
+ 					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
+				}
+			}
+		  })
+		  .state('svg.detail', {
+			url: '/:detail',
+			views:{
+				"axis2":{
+					templateUrl: 'components/svg/svg.html',					controller: 'ThreeSVGController'
+				},
+				"axis3":{
+ 					templateUrl: 'components/context/context.html',			controller: 'ThreeContextController'
+				},
+				"pageBottom":{
+					templateUrl: 'components/footer/footer.html',			controller: 'ThreeFooterController'
 				}
 			}
 		  });
